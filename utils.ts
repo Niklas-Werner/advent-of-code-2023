@@ -139,3 +139,11 @@ export function cached<A extends unknown[], R>(fn: (...args: A) => R, getKey: (.
         return value;
     };
 }
+
+export function sum(numbers: number[]) {
+    return numbers.reduce((a, b) => a + b, 0);
+}
+
+export function reverseString(str: string) {
+    return str.split('').reverse().join('');
+}
