@@ -1,0 +1,6 @@
+{
+  "extends": "@nw55/build-tools/tsconfig/node/18",
+  "compilerOptions": {
+    "module": "Node16"
+  }
+}

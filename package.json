@@ -1,0 +1,26 @@
+{
+  "name": "advent-of-code-2023",
+  "version": "1.0.0",
+  "type": "module",
+  "repository": "https://github.com/Niklas-Werner/advent-of-code-2023.git",
+  "author": "Niklas Werner <Niklas-Werner@outlook.com>",
+  "license": "MIT",
+  "private": true,
+  "scripts": {
+    "start": "tsx"
+  },
+  "dependencies": {
+    "@nw55/build-tools": "~0.3.0",
+    "@nw55/common": "~0.3.0",
+    "@nw55/logging": "~0.2.0",
+    "@nw55/node-utils": "~0.2.0",
+    "@types/node": "^18.19.2",
+    "chalk": "^5.3.0",
+    "tsx": "^4.6.2",
+    "typescript": "~5.3.2"
+  },
+  "packageManager": "yarn@4.0.2",
+  "devDependencies": {
+    "@yarnpkg/sdks": "^3.1.0"
+  }
+}
