@@ -1,6 +1,4 @@
-import { count } from 'console';
 import { dayLogger, runDay, splitOnce, sum } from '../utils.js';
-import { subscribe } from 'diagnostics_channel';
 
 type Game = {
     id: number;

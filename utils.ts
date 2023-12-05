@@ -1,12 +1,17 @@
 import { AnyRecord, Awaitable, TwoWayMap } from '@nw55/common';
-import { Log, logFormat } from '@nw55/logging';
+import { Log, LogFilterResolvable, isLogLevelIncluded, logFormat } from '@nw55/logging';
 import { createConsoleLogWriter, startProgram, tryReadTextFile } from '@nw55/node-utils';
 import chalk from 'chalk';
 import { dirname, resolve } from 'path';
 import { fileURLToPath } from 'url';
 
+let testMode = false;
+
+const logFilter: LogFilterResolvable = level => isLogLevelIncluded(
+    testMode ? 'trace' : 'debug', level);
+
 Log.addGlobalLogWriter(createConsoleLogWriter({
-    filter: true,
+    filter: logFilter,
     colorStyler: chalk,
     logData: true,
     format: logFormat`[${'time'}] ${logFormat.level('symbol')}: ${'text'}`
@@ -44,6 +49,7 @@ interface FnOptions {
 export function runDay<O extends DayOptions>(moduleUrl: string, options: O, fn: (input: InputType<O>, options: FnOptions) => Awaitable<void>) {
     startProgram(async ([param]) => {
         const test = param && param.startsWith('test') ? param.length === 4 ? 1 : parseInt(param.slice(4)) : 0;
+        testMode = test > 0;
         const dir = dirname(fileURLToPath(moduleUrl));
         const file = resolve(dir, test > 0 ? `test-input${test === 1 ? '' : test}` : 'input');
         const fnOptions: FnOptions = { test };
