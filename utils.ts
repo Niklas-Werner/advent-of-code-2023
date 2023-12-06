@@ -113,7 +113,7 @@ export function backtrackMatch<K, V>(candidates: Iterable<readonly [K, Iterable<
     return success ? matches : null;
 }
 
-export const compareStrings = (a: string, b: string) => a > b ? 1 : b > a ? -1 : 0;
+export const compare = (a: string | number, b: string | number) => a > b ? 1 : b > a ? -1 : 0;
 
 export const parseDecimalInt = (x: string) => parseInt(x.trim());
 
