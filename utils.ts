@@ -8,7 +8,7 @@ import { fileURLToPath } from 'url';
 let testMode = false;
 
 const logFilter: LogFilterResolvable = level => isLogLevelIncluded(
-    testMode ? 'trace' : 'debug', level);
+    testMode ? 'trace' : 'verbose', level);
 
 Log.addGlobalLogWriter(createConsoleLogWriter({
     filter: logFilter,
@@ -113,7 +113,7 @@ export function backtrackMatch<K, V>(candidates: Iterable<readonly [K, Iterable<
     return success ? matches : null;
 }
 
-export const compare = (a: string | number, b: string | number) => a > b ? 1 : b > a ? -1 : 0;
+export const compare = (a: string | number, b: string | number, then: -1 | 0 | 1 = 0) => a > b ? 1 : b > a ? -1 : then;
 
 export const parseDecimalInt = (x: string) => parseInt(x.trim());
 
