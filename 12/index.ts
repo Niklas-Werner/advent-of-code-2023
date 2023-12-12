@@ -1,72 +1,73 @@
-import { dayLogger, logResult, parseDecimalInt, runDay } from '../utils.js';
+import { cached, dayLogger, logResult, parseDecimalInt, runDay } from '../utils.js';
 
 runDay(import.meta.url, {}, async input => {
 
-    function isValidArrangementUntilFirstUnknown(springs: string[], groupSizes: number[]) {
-        let nextGroup = 0;
-        let remainingInGroup = 0;
-        let expectSeparator = false;
-        for (const spring of springs) {
-            if (spring === '#') {
-                if (remainingInGroup > 0) {
-                    // found # in group as expected
-                    remainingInGroup--;
-                }
-                else if (expectSeparator) {
-                    // need . between #s
-                    return false;
-                }
-                else if (nextGroup >= groupSizes.length) {
-                    // no group left
-                    return false;
-                }
-                else {
-                    // start next group
-                    remainingInGroup = groupSizes[nextGroup] - 1;
-                }
-                if (remainingInGroup === 0) {
-                    // group complete
-                    expectSeparator = true;
-                    nextGroup++;
-                }
-            }
-            else if (spring === '.') {
-                if (remainingInGroup > 0) {
-                    // found . but expected #
-                    return false;
-                }
-                // found a valid separator
-                expectSeparator = false;
-            }
-            else {
-                // reached first unknown
-                return true;
-            }
-        }
-        // reached end
-        return nextGroup === groupSizes.length && remainingInGroup === 0;
+    type ValidationState = {
+        nextGroup: number;
+        remainingInGroup: number;
+        expectSeparator: boolean;
+    };
+
+    function initValidation(): ValidationState {
+        return {
+            nextGroup: 0,
+            remainingInGroup: 0,
+            expectSeparator: false
+        };
     }
 
-    function countValidArrangements(springs: string[], springsPos: number, groupSizes: number[]): number {
-        if (!isValidArrangementUntilFirstUnknown(springs, groupSizes))
-            return 0;
+    function validationStep(state: ValidationState, spring: string | null, groupSizes: number[]): ValidationState | false {
+        let { nextGroup, remainingInGroup, expectSeparator } = state;
+        if (spring === '#') {
+            if (remainingInGroup > 0) {
+                // found # in group as expected
+                remainingInGroup--;
+            }
+            else if (expectSeparator) {
+                // need . between #s
+                return false;
+            }
+            else if (nextGroup >= groupSizes.length) {
+                // no group left
+                return false;
+            }
+            else {
+                // start next group
+                remainingInGroup = groupSizes[nextGroup] - 1;
+            }
+            if (remainingInGroup === 0) {
+                // group complete
+                expectSeparator = true;
+                nextGroup++;
+            }
+        }
+        else if (spring === '.') {
+            if (remainingInGroup > 0) {
+                // found . but expected #
+                return false;
+            }
+            // found a valid separator
+            expectSeparator = false;
+        }
+        else {
+            // reached end or unknown
+            if (!endValidation(state, groupSizes))
+                return false;
+        }
+        return { remainingInGroup, expectSeparator, nextGroup };
+    }
 
-        if (springsPos >= springs.length)
-            return 1;
+    function endValidation(state: ValidationState | false, groupSizes: number[]) {
+        if (state === false)
+            return false;
+        return state.nextGroup === groupSizes.length && state.remainingInGroup === 0;
+    }
 
-        if (springs[springsPos] !== '?')
-            return countValidArrangements(springs, springsPos + 1, groupSizes);
-
-        let result = 0;
-
-        springs[springsPos] = '#';
-        result += countValidArrangements(springs, springsPos + 1, groupSizes);
-
-        springs[springsPos] = '.';
-        result += countValidArrangements(springs, springsPos + 1, groupSizes);
-
-        springs[springsPos] = '?';
-        return result;
+    function getCacheKey(springsPos: number, validationState: ValidationState | false) {
+        if (validationState === false)
+            return String(springsPos);
+        else
+            return springsPos + ',' + validationState.nextGroup + ',' + validationState.remainingInGroup + ',' + validationState.expectSeparator;
     }
 
     function runPart(input: string[]) {
@@ -76,7 +77,32 @@ runDay(import.meta.url, {}, async input => {
             const [springsStr, groupSizesStr] = line.split(' ');
             const springs = springsStr.split('');
             const groupSizes = groupSizesStr.split(',').map(parseDecimalInt);
-            const count = countValidArrangements(springs, 0, groupSizes);
+
+            function countValidArrangements(springsPos: number, validationState: ValidationState | false): number {
+                if (!validationState)
+                    return 0;
+
+                if (springsPos >= springs.length && endValidation(validationState, groupSizes))
+                    return 1;
+
+                if (springs[springsPos] !== '?')
+                    return cachedCount(springsPos + 1, validationStep(validationState, springs[springsPos], groupSizes));
+
+                let result = 0;
+
+                springs[springsPos] = '#';
+                result += cachedCount(springsPos + 1, validationStep(validationState, '#', groupSizes));
+
+                springs[springsPos] = '.';
+                result += cachedCount(springsPos + 1, validationStep(validationState, '.', groupSizes));
+
+                springs[springsPos] = '?';
+                return result;
+            }
+
+            const cachedCount = cached(countValidArrangements, getCacheKey);
+
+            const count = cachedCount(0, initValidation());
             sum += count;
             dayLogger.debug({ springs: springsStr, groupSizes: groupSizesStr, count });
         }
